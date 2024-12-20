@@ -1,0 +1,99 @@
+(defvar toggled true)
+
+(defpoll brightness_percent :interval "1s" "brightnessctl -m -d intel_backlight | awk -F, '{print substr($4, 0, length($4)-1)}' | tr -d '%'")
+
+(defwidget bar []
+  (centerbox :orientation "h" :visible toggled
+    (workspaces)
+    ""
+    (sidestuff)
+  )
+)
+
+
+(defwidget bat []
+  (box  
+    {"${battery_status}" == "Charging" ?
+    "󰂄${battery}% ":
+    "󰁹${battery}% "
+    }
+  )
+)
+
+(defwidget sidestuff []
+  (box :class "sidestuff" :orientation "h" :space-evenly false :halign "end"
+    (metric :label " "
+            :value brightness_percent
+            :onchange "brightnessctl set {}%")
+    (metric :label "${volume == 0 ? " " :" "}"
+            :value volume
+            :onchange "amixer -D pulse sset Master {}%")
+    (bat)
+    time)
+)
+
+(defwidget metric [label value onchange]
+  (box :orientation "h"
+       :class "metric"
+       :space-evenly false
+    (box :class "label" label)
+    (scale :min 0
+           :max 101
+           :active {onchange != ""}
+           :value value
+           :onchange onchange)))
+
+
+(defpoll volume :interval "1s"
+  "scripts/getvol")
+
+(defpoll time :interval "10s"
+  "date '+%H:%M'")
+
+(defpoll battery :interval "10s"
+  "scripts/battery --bat")
+
+(defpoll battery_status :interval "10s"
+  "scripts/battery --bat-st")
+
+(defwindow bar
+  :monitor 0
+  :windowtype "dock"
+  :exclusive true
+  :geometry (geometry :x "0%"
+                      :y "0%"
+                      :width "100%"
+                      :anchor "top center")
+  (bar)
+)
+
+(defwindow bar1
+  :monitor 1
+  :windowtype "dock"
+  :exclusive true
+  :geometry (geometry :x "0%"
+                      :y "0%"
+                      :width "100%"
+                      :anchor "top center")
+  (bar)
+)
+
+
+;; (defpoll workspaces :interval "0.1s" :initial "[]" "bash ~/.config/eww/scripts/get-workspaces.sh")
+(deflisten workspaces :interval "1s" :initial "1" "bash ~/.config/eww/scripts/get-workspaces.sh")
+(deflisten current_workspace :initial "1" "bash ~/.config/eww/scripts/get-active-workspace.sh")
+(defwidget workspaces []
+  (eventbox :onscroll "bash ~/.config/eww/scripts/change-active-workspace.sh {} ${current_workspace}" :class "workspaces-widget"
+    (box :space-evenly false :spacing 15 :icon-size 10
+      (label :text "${workspaces}${current_workspace}" :visible false)
+      (for workspace in workspaces
+        (eventbox :onclick "hyprctl dispatch workspace ${workspace.id}"
+          (box :class "workspace-entry ${workspace.id == current_workspace ? "current" : ""} ${workspace.windows > 0 ? "occupied" : "empty"}"
+            ;; (label :text "${workspace.id == current_workspace ? "" : workspace.id}")
+            (label :text "${workspace.id == current_workspace ? "" : ""}")
+            )
+          )
+        )
+      )
+    )
+  )
