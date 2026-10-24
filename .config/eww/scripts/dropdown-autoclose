@@ -1,0 +1,29 @@
+#!/bin/bash
+# Manage a 2s auto-close timer for dropdown_window.
+#   dropdown-autoclose start  -> (re)start the countdown; closes window after 2s
+#   dropdown-autoclose cancel -> cancel a pending countdown (e.g. on hover)
+
+PIDFILE="/tmp/eww-dropdown-autoclose.pid"
+
+cancel() {
+    if [[ -f "$PIDFILE" ]]; then
+        kill "$(cat "$PIDFILE")" 2>/dev/null
+        rm -f "$PIDFILE"
+    fi
+}
+
+case "$1" in
+    start)
+        cancel
+        (
+            sleep 2
+            eww close dropdown_window
+            eww update dropdown_open=false wifi_expanded=false audio_expanded=false bluetooth_expanded=false
+            rm -f "$PIDFILE"
+        ) &
+        echo $! > "$PIDFILE"
+        ;;
+    cancel)
+        cancel
+        ;;
+esac

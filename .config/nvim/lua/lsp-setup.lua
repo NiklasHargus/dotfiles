@@ -15,6 +15,8 @@ local on_attach = function(_, bufnr)
     vim.keymap.set('n', keys, func, { buffer = bufnr, desc = desc })
   end
 
+
+
   nmap('<leader>rn', vim.lsp.buf.rename, '[R]e[n]ame')
   nmap('<leader>ca', function()
     vim.lsp.buf.code_action { context = { only = { 'quickfix', 'refactor', 'source' } } }
@@ -28,7 +30,7 @@ local on_attach = function(_, bufnr)
   -- nmap('<leader>ws', require('telescope.builtin').lsp_dynamic_workspace_symbols, '[W]orkspace [S]ymbols')
 
   -- See `:help K` for why this keymap
-  nmap('K', vim.lsp.buf.hover, 'Hover Documentation')
+  nmap('K', function() vim.lsp.buf.hover { border = 'rounded' } end, 'Hover Documentation')
   nmap('<C-s>', vim.lsp.buf.signature_help, 'Signature Documentation')
 
   -- Lesser used LSP functionality
@@ -95,30 +97,53 @@ require('mason-lspconfig').setup()
 --  define the property 'filetypes' to the map in question.
 local servers = {
   clangd = {
-    cmd = {{
-      'clangd',
-      '--clang-tidy',
-      '--header-insertion=never',
-      }
-    }
-  },
-  gopls = {},
-  ruff = {},
-  pyright = {},
-  ltex = {},
-  matlab_ls = {
-    filetypes = { "matlab" },
-    settings = {
-      matlab = {
-        installPath = "/opt/matlab/R2023a/"
-      },
+    cmd = {
+      "clangd",
+      "--completion-style=detailed",
+      "--header-insertion=never",
+      "--clang-tidy",
+      -- "--compile-commands-dir=/home/niklas/code/cpp/test/build"
     },
-    single_file_support = true,
+    on_attach = on_attach,
+    handlers = {
+      ["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, { border = "rounded" }),
+    },
+    settings = {
+      single_file_support = true,
+    },
+  },
+  sqls = {on_attach=on_attach},
+  ruff = {on_attach=on_attach},
+  pyright = {on_attach=on_attach},
+  ltex = {
+    on_attach=on_attach
+  },
+  tinymist = {
+    settings = {
+      formatterMode = "typstyle",
+      exportPdf = "onType",
+      semanticTokens = "disable"
+    },
+    on_attach = on_attach,
+  },
+  rust_analyzer = {
+    on_attach = on_attach,
+  },
+  marksman = {
+    on_attach = on_attach,
   },
 
-  rust_analyzer = {},
-  -- tsserver = {},
-  -- html = { filetypes = { 'html', 'twig', 'hbs'} },
+  -- texlab = {
+  --   settings = {
+  --     texlab = {
+  --       formatterLineLength = 80, -- Optional: Line length for formatting
+  --       indentation = {
+  --         tabWidth = 1,
+  --         useSpaces = true
+  --       },
+  --     }
+  --   }
+  -- },
 
   lua_ls = {
     Lua = {
@@ -127,6 +152,7 @@ local servers = {
       -- NOTE: toggle below to ignore Lua_LS's noisy `missing-fields` warnings
       -- diagnostics = { disable = { 'missing-fields' } },
     },
+    on_attach = on_attach,
   },
 }
 
@@ -137,6 +163,7 @@ require('neodev').setup()
 local capabilities = vim.lsp.protocol.make_client_capabilities()
 capabilities = require('cmp_nvim_lsp').default_capabilities(capabilities)
 
+
 -- Ensure the servers above are installed
 local mason_lspconfig = require 'mason-lspconfig'
 
@@ -146,24 +173,23 @@ mason_lspconfig.setup {
 
 local mason_registry = require('mason-registry')
 
-mason_lspconfig.setup_handlers {
-  function(server_name)
-    require('lspconfig')[server_name].setup {
-      capabilities = capabilities,
-      on_attach = on_attach,
-      settings = servers[server_name],
-      filetypes = (servers[server_name] or {}).filetypes,
-    }
-  end,
-}
+-- mason_lspconfig.setup_handlers {
+--   function(server_name)
+--     require('lspconfig')[server_name].setup {
+--       capabilities = capabilities,
+--       on_attach = on_attach,
+--       settings = servers[server_name],
+--       cmd = (servers[server_name] or {}).cmd,
+--       filetypes = (servers[server_name] or {}).filetypes,
+--     }
+--   end,
+-- }
 
 -- Set border style
-vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {
-  border = "rounded",
-})
-
-vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, {
-  border = "rounded",
-})
+-- local hover = vim.lsp.buf.hover
+-- local cmp = require 'cmp'
+-- vim.o.winborder = 'rounded'
+-- vim.lsp.hover{}
+-- vim.lsp.buf.hover = hover({border =  cmp.config.window.bordered()})
 
 -- vim: ts=2 sts=2 sw=2 et

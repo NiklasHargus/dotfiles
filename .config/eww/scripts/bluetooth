@@ -1,0 +1,22 @@
+#!/bin/bash
+
+case "$1" in
+    status)
+        if bluetoothctl show | grep -q "Powered: yes"; then
+            echo "on"
+        else
+            echo "off"
+        fi
+        ;;
+    devices)
+        bluetoothctl devices | while read -r device; do
+            mac=$(echo "$device" | awk '{print $2}')
+            name=$(echo "$device" | cut -d ' ' -f 3-)
+            if bluetoothctl info "$mac" | grep -q "Connected: yes"; then
+                echo "(button :onclick 'bluetoothctl disconnect $mac' :class 'bt-device connected' '󰂱 $name')"
+            else
+                echo "(button :onclick 'bluetoothctl connect $mac' :class 'bt-device' '󰂲 $name')"
+            fi
+        done
+        ;;
+esac

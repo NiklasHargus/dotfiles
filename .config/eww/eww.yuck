@@ -1,18 +1,146 @@
 (defvar toggled true)
+(defvar dropdown_open false)
+(defvar wifi_expanded false)
+(defvar audio_expanded false)
+(defvar bluetooth_expanded false)
 
 (defpoll brightness_percent :interval "1s" "brightnessctl -m -d intel_backlight | awk -F, '{print substr($4, 0, length($4)-1)}' | tr -d '%'")
+(defpoll volume :interval "1s"
+  "scripts/getvol")
+
+(defpoll time :interval "10s"
+  "date '+%H:%M'")
+
+(defpoll battery :interval "10s"
+  "scripts/battery --bat")
+
+(defpoll battery_status :interval "10s"
+  "scripts/battery --bat-st")
+
+(defpoll ram_usage :interval "5s"
+  "free | awk '/Mem:/ {printf \"%.0f\", $3/$2 * 100}'")
+
+(defpoll audio_sinks :interval "1s" :initial "[]" :run-while "${dropdown_open && audio_expanded}"
+  "scripts/get-audio-sinks.sh")
+
+(defpoll bluetooth_devices :interval "1s" :initial "[]" :run-while "${dropdown_open && bluetooth_expanded}"
+  "scripts/get-bluetooth-devices.sh")
+
+(defpoll wifi_networks :interval "5s" :initial "[]" :run-while "${dropdown_open && wifi_expanded}"
+  "scripts/get-wifi-networks.sh")
+
+(defpoll vpn_connected :interval "2s" :initial "false" :run-while dropdown_open
+  "scripts/get-vpn-status.sh")
+
+(defpoll vpn_server :interval "2s" :initial "" :run-while dropdown_open
+  "scripts/get-vpn-server.sh")
+
+(defpoll dgpu_connected :interval "2s" :initial "false" :run-while dropdown_open
+  "scripts/get-dgpu-status.sh")
+
+(defwidget dropdown []
+  (button :onclick "scripts/toggle-dropdown"
+    "${time}")
+)
+
+(defwidget wifi_networks_list []
+  (box :orientation "v" :class "wifi-networks" :space-evenly false
+    (button :class "section-title ${wifi_expanded ? 'expanded' : ''}"
+            :onclick "eww update wifi_expanded=${!wifi_expanded}"
+      "WiFi Networks")
+    (revealer :transition "slidedown" :reveal wifi_expanded :duration "200ms"
+      (box :orientation "v" :space-evenly false
+        (for network in wifi_networks
+          (button :onclick "scripts/toggle-wifi-network ${network.ssid}"
+                  :class "${network.connected ? 'active' : ''}"
+            "${network.ssid}")
+        )
+      )
+    )
+  )
+)
+
+(defwidget audio_sinks_list []
+  (box :orientation "v" :class "audio-sinks" :space-evenly false
+    (button :class "section-title ${audio_expanded ? 'expanded' : ''}"
+            :onclick "eww update audio_expanded=${!audio_expanded}"
+      "Audio Sinks")
+    (revealer :transition "slidedown" :reveal audio_expanded :duration "200ms"
+      (box :orientation "v" :space-evenly false
+        (for sink in audio_sinks
+          (button :onclick "scripts/set-audio-sink ${sink.name}"
+                  :class "${sink.is_default ? 'active' : ''}"
+            "${sink.description}")
+        )
+      )
+    )
+  )
+)
+
+(defwidget bluetooth_devices_list []
+  (box :orientation "v" :class "bluetooth-devices" :space-evenly false
+    (button :class "section-title ${bluetooth_expanded ? 'expanded' : ''}"
+            :onclick "eww update bluetooth_expanded=${!bluetooth_expanded}"
+      "Bluetooth Devices")
+    (revealer :transition "slidedown" :reveal bluetooth_expanded :duration "200ms"
+      (box :orientation "v" :space-evenly false
+        (for device in bluetooth_devices
+          (button :onclick "scripts/toggle-bluetooth-device ${device.mac}"
+                  :class "${device.connected ? 'active' : ''}"
+            "${device.name}")
+        )
+      )
+    )
+  )
+)
+
+(defwidget vpn_toggle []
+  (box :orientation "h" :class "vpn" :space-evenly true :spacing 6
+    (button :class "section-title vpn-button ${vpn_connected ? 'active' : ''}"
+            :onclick "scripts/toggle-vpn &"
+      (label :halign "center" :hexpand true
+             :text "VPN${vpn_connected ? " · ${vpn_server}" : ""}"))
+    (button :class "section-title dgpu-button ${dgpu_connected ? 'active' : ''}"
+            :onclick "scripts/toggle-dgpu &"
+      (label :halign "center" :hexpand true :text "dGPU"))
+  )
+)
+
+(defwidget dropdown_content []
+  (eventbox :onhover "scripts/dropdown-autoclose cancel"
+            :onhoverlost "scripts/dropdown-autoclose start"
+    (box :orientation "v" :class "dropdown-menu" :space-evenly false
+      (vpn_toggle)
+      (box :class "separator")
+      (wifi_networks_list)
+      (box :class "separator")
+      (audio_sinks_list)
+      (box :class "separator")
+      (bluetooth_devices_list)
+    )
+  )
+)
+
 
 (defwidget bar []
   (centerbox :orientation "h" :visible toggled
     (workspaces)
-    ""
+    (systray :spacing 10
+             :orientation "h"
+             :space-evenly: true
+             :icon-size 22
+    )
     (sidestuff)
   )
 )
 
 
+(defwidget ram []
+  (box " ${ram_usage}% ")
+)
+
 (defwidget bat []
-  (box  
+  (box
     {"${battery_status}" == "Charging" ?
     "󰂄${battery}% ":
     "󰁹${battery}% "
@@ -28,8 +156,10 @@
     (metric :label "${volume == 0 ? " " :" "}"
             :value volume
             :onchange "amixer -D pulse sset Master {}%")
+    (ram)
     (bat)
-    time)
+    (dropdown)
+  )
 )
 
 (defwidget metric [label value onchange]
@@ -44,17 +174,6 @@
            :onchange onchange)))
 
 
-(defpoll volume :interval "1s"
-  "scripts/getvol")
-
-(defpoll time :interval "10s"
-  "date '+%H:%M'")
-
-(defpoll battery :interval "10s"
-  "scripts/battery --bat")
-
-(defpoll battery_status :interval "10s"
-  "scripts/battery --bat-st")
 
 (defwindow bar
   :monitor 0
@@ -67,7 +186,7 @@
   (bar)
 )
 
-(defwindow bar1
+(defwindow bar_second
   :monitor 1
   :windowtype "dock"
   :exclusive true
@@ -78,6 +197,17 @@
   (bar)
 )
 
+(defwindow dropdown_window
+  :monitor 0
+  :windowtype "dialog"
+  :geometry (geometry :x "10px"
+                      :y "10px"
+                      :width "300px"
+                      :anchor "top right")
+  :stacking "overlay"
+  :focusable false
+  (dropdown_content)
+)
 
 ;; (defpoll workspaces :interval "0.1s" :initial "[]" "bash ~/.config/eww/scripts/get-workspaces.sh")
 (deflisten workspaces :interval "1s" :initial "1" "bash ~/.config/eww/scripts/get-workspaces.sh")

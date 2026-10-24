@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Check if dropdown_window is open
+if eww active-windows | grep "dropdown_window"; then
+    eww close dropdown_window
+    eww update dropdown_open=false wifi_expanded=false audio_expanded=false bluetooth_expanded=false
+    scripts/dropdown-autoclose cancel
+else
+    eww update dropdown_open=true
+    eww open dropdown_window
+    # Start the countdown so it auto-closes if never hovered
+    scripts/dropdown-autoclose start
+fi

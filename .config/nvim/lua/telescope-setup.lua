@@ -9,6 +9,7 @@ require('telescope').setup {
       },
     },
     file_ignore_patterns = {
+        "vcpkg_installed*",
         "%.pdf",
         "build/*",
         "%.dae",

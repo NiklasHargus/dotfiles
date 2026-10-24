@@ -45,18 +45,22 @@ vim.defer_fn(function()
         goto_next_start = {
           [']m'] = '@function.outer',
           [']]'] = '@class.outer',
+          [']p'] = '@parameter.inner',
         },
         goto_next_end = {
           [']M'] = '@function.outer',
           [']['] = '@class.outer',
+          [']P'] = '@parameter.inner',
         },
         goto_previous_start = {
           ['[m'] = '@function.outer',
           ['[['] = '@class.outer',
+          ['[p'] = '@parameter.inner',
         },
         goto_previous_end = {
           ['[M'] = '@function.outer',
           ['[]'] = '@class.outer',
+          ['[P'] = '@parameter.inner',
         },
       },
       swap = {

@@ -1,0 +1,11 @@
+#!/bin/bash
+
+cd "$(dirname "$0")/.." || exit 1
+
+if [ "$(scripts/get-dgpu-status.sh)" = "true" ]; then
+    sudo -n "$PWD/scripts/dgpu-priv" off
+    sudo echo '1500' > '/proc/sys/vm/dirty_writeback_centisecs'
+else
+    sudo -n "$PWD/scripts/dgpu-priv" on
+    sudo echo '1500' > '/proc/sys/vm/dirty_writeback_centisecs'
+fi

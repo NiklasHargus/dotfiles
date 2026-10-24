@@ -1,0 +1,43 @@
+#!/bin/bash
+# Privileged half of the dGPU toggle. Runs as root via a NOPASSWD sudoers rule
+# (/etc/sudoers.d/eww-dgpu), so it must not take any path or command from the
+# caller -- only the literal arguments "on" and "off".
+
+set -u
+
+DGPU_PCI="0000:03:00.0"
+
+case "${1-}" in
+    on)
+        # Re-add the device to the PCI subsystem; the driver binds automatically.
+        echo 1 > /sys/bus/pci/rescan
+        # The rescan is asynchronous, so wait for the device to appear before
+        # touching its power knobs.
+        for _ in $(seq 1 50); do
+            [ -e "/sys/bus/pci/devices/$DGPU_PCI/power/control" ] && break
+            sleep 0.1
+        done
+        # A rescanned device comes back with runtime PM disabled (control="on"),
+        # which powertop flags as a power regression. Re-enable it.
+        if [ -e "/sys/bus/pci/devices/$DGPU_PCI/power/control" ]; then
+            echo auto > "/sys/bus/pci/devices/$DGPU_PCI/power/control"
+        fi
+        ;;
+    off)
+        # Unbind from whichever driver holds it, then remove it entirely.
+        for drv in i915 xe; do
+            if [ -e "/sys/bus/pci/drivers/$drv/$DGPU_PCI" ]; then
+                echo "$DGPU_PCI" > "/sys/bus/pci/drivers/$drv/unbind"
+            fi
+        done
+        if [ -e "/sys/bus/pci/devices/$DGPU_PCI" ]; then
+            # allow PM
+            echo auto > "/sys/bus/pci/devices/$DGPU_PCI/power/control"
+            echo 1 > "/sys/bus/pci/devices/$DGPU_PCI/remove"
+        fi
+        ;;
+    *)
+        echo "usage: ${0##*/} on|off" >&2
+        exit 1
+        ;;
+esac

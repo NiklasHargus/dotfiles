@@ -1,0 +1,5 @@
+[user]
+	email = niklas@hargus.de
+	name = Niklas
+[protocol "file"]
+	allow = always

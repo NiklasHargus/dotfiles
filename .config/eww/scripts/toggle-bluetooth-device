@@ -1,0 +1,19 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+    echo "Usage: $0 <mac_address>"
+    exit 1
+fi
+
+mac="$1"
+
+# Check if device is connected
+info=$(bluetoothctl info "$mac")
+
+if echo "$info" | grep -q "Connected: yes"; then
+    # Disconnect
+    bluetoothctl disconnect "$mac"
+else
+    # Connect
+    bluetoothctl connect "$mac"
+fi

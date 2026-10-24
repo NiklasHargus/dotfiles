@@ -1,0 +1,7 @@
+If:
+  PathMatch: [.*\.cpp, .*\.cxx, .*\.cc, .*\.hpp, .*\.hxx, .*\.ipp]
+CompileFlags:
+  Add: [-std=c++23]
+Completion:
+  AllScopes: No
+

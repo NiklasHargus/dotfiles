@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Set the default sink to the specified name and move all streams
+if [ -z "$1" ]; then
+    echo "Usage: $0 <sink_name>"
+    exit 1
+fi
+
+# Set the default sink for new streams
+pactl set-default-sink "$1"
+
+# Move all existing sink inputs to the new sink
+pactl list short sink-inputs | while read -r stream; do
+    stream_id=$(echo "$stream" | awk '{print $1}')
+    pactl move-sink-input "$stream_id" "$1"
+done

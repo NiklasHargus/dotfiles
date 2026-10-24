@@ -1,0 +1,20 @@
+configuration{
+    modi: "drun,claude:rofi-claude,ssh";
+    icon-theme: "Oranchelo";
+    show-icons: true;
+    terminal: "kitty";
+    drun-display-format: "{icon} {name}";
+    location: 0;
+    disable-history: false;
+    hide-scrollbar: true;
+    display-drun: "   Apps ";
+    display-ssh: "   SSH ";
+    display-run: "   Run ";
+    display-window: " 󰕰  Window";
+    display-claude: " 󰚩  Claude";
+    display-Network: " 󰤨  Network";
+    sidebar-mode: true;
+}
+
+@theme "catppuccin-mocha"
+

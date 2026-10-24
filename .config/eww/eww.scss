@@ -3,16 +3,110 @@
   font-family: "JetBrainsMono Nerd Font"
 }
 
+
+menu {
+  padding: 10px;
+  /* background-color: #CDD6F4; */
+  background-color: rgba(0,0,0,0.15);
+  color: #CDD6F4;
+  border-radius: 8px;
+  border: 2px solid #CDD6F4;
+
+  menuitem {
+    padding: 3px 12px;
+  }
+  menuitem:hover {
+    background-color: #CDD6F4;
+  }
+}
+
 // Global Styles
 .bar {
   /* background-color: #11111b; */
   /* background-color: fade-out(#000000, 0.5);     */
-  background-color: rgba(0,0,0,0.3);
+  background-color: rgba(0,0,0,0.15);
   color: #CDD6F4;
   padding: 5px 10px;
   /* border-radius: 10px; */
   /* opacity: 0.5; */
   font-size: 12pt;
+}
+.bar_second {
+  /* background-color: #11111b; */
+  /* background-color: fade-out(#000000, 0.5);     */
+  background-color: rgba(0,0,0,0.15);
+  color: #CDD6F4;
+  padding: 5px 10px;
+  border-radius: 10px;
+  /* opacity: 0.5; */
+  font-size: 12pt;
+}
+
+.dropdown-menu{
+  /* background-color: #1e1e2e; */
+  // background-color: rgba(30,30,46,1.0);
+  background-color: rgba(0,0,0,0.15);
+  color: #CDD6F4;
+  padding: 5px 10px;
+  border-radius: 10px;
+  font-size: 12pt;
+  border: 2px solid #CDD6F4;
+  button {
+    padding: 5px 10px;
+    margin: 2px 0;
+    min-height: 20px;
+    color: #CDD6F4;
+    &:hover {
+      color: #D35D6E;
+    }
+    &.active {
+      font-weight: bold;
+    }
+  }
+  .separator {
+    min-height: 1px;
+    min-width: 100px;
+    background-color: #CDD6F4;
+    margin: 8px 0;
+  }
+  .section-title {
+    font-size: 13pt;
+    font-weight: bold;
+    min-height: 20px;
+    &.expanded {
+      color: #D35D6E;
+    }
+  }
+  .vpn-button,
+  .dgpu-button {
+    border-radius: 6px;
+    padding: 7px 10px;
+    margin: 2px 0;
+    // Give the resting state a real surface + border so these read as buttons
+    // instead of bold text on the dropdown background.
+    background-color: rgba(205, 214, 244, 0.08);
+    border: 1px solid rgba(205, 214, 244, 0.35);
+    &:hover {
+      background-color: rgba(205, 214, 244, 0.16);
+      border-color: rgba(205, 214, 244, 0.6);
+    }
+    // Pressing shifts the surface darker for tactile feedback.
+    &:active {
+      background-color: rgba(205, 214, 244, 0.22);
+    }
+    // .section-title is already bold, so mark the connected state with a muted
+    // green tint rather than a weight change.
+    &.active {
+      color: #A6E3A1;
+      background-color: rgba(166, 227, 161, 0.15);
+      border-color: rgba(166, 227, 161, 0.55);
+      &:hover {
+        color: #A6E3A1;
+        background-color: rgba(166, 227, 161, 0.25);
+        border-color: rgba(166, 227, 161, 0.8);
+      }
+    }
+  }
 }
 
 // Styles on classes (see eww.yuck for more information)

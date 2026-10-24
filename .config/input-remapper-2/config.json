@@ -1,0 +1,8 @@
+{
+    "version": "2.0.1",
+    "autoload": {
+        "AT Translated Set 2 keyboard": "new preset",
+        "YDKB YD67BLE (USB_DN6B)": "new preset",
+        "YD67BLE Mouse": "new preset"
+    }
+}
